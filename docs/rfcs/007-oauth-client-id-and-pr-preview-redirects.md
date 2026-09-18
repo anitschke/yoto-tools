@@ -21,61 +21,31 @@ Yoto's developer dashboard requires explicit whitelisting of exact callback URLs
 
 ---
 
-## 3. The Relay Redirect Solution: Canonical Callback Forwarding
+## 3. Direct OAuth Redirect via Wildcard Callback Whitelisting
 
-To support fully functional OAuth login on ephemeral PR deploy previews without registering hundreds of individual URLs in the Yoto developer portal:
+Because Yoto's developer dashboard (backed by Auth0) supports wildcard subdomains in the **Allowed Callback URLs** setting:
+```text
+https://yoto-tools.netlify.app/callback, http://localhost:5173/callback, https://deploy-preview-*--yoto-tools.netlify.app/callback
+```
+
+Both redirecting and CORS requests for token exchange (`/oauth/token`) work directly from any ephemeral deploy preview origin without requiring any bounce or relay through production:
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User
-    participant PRPreview as PR Preview (deploy-preview-42)
+    participant PRPreview as PR Preview (deploy-preview-X)
     participant Auth0 as Yoto Auth0 (login.yotoplay.com)
-    participant Canonical as Production Canonical (yoto-tools.netlify.app/callback)
 
-    User->>PRPreview: Click "Log In" on PR Preview
-    PRPreview->>PRPreview: Store verifier in localStorage
-    PRPreview->>Auth0: Redirect to /authorize with:<br/>redirect_uri = https://yoto-tools.netlify.app/callback<br/>state = {csrf, returnTo: "https://deploy-preview-42..."}
+    User->>PRPreview: Click "Sign In"
+    PRPreview->>PRPreview: Generate PKCE verifier + S256 challenge, store in sessionStorage
+    PRPreview->>Auth0: Redirect to /authorize with:<br/>redirect_uri = https://deploy-preview-X.../callback
     Auth0-->>User: Present Login & Consent
-    Auth0-->>Canonical: Redirect to Canonical URL with ?code=...&state=...
-    Canonical->>Canonical: Parse state.returnTo
-    alt returnTo is a verified deploy-preview or localhost origin
-        Canonical-->>PRPreview: Forward redirect: returnTo/callback?code=...&state=...
-    else returnTo is production
-        Canonical->>Canonical: Finish exchange on production
-    end
-    PRPreview->>Auth0: Exchange code + verifier for tokens
-    PRPreview-->>User: Authenticated on PR preview!
+    Auth0-->>PRPreview: Redirect directly back to PRPreview with ?code=...&state=...
+    PRPreview->>Auth0: POST /oauth/token with code + verifier (CORS allowed via wildcard)
+    Auth0-->>PRPreview: Return tokens (access_token, refresh_token)
+    PRPreview-->>User: Authenticated directly on PR preview!
 ```
-
-### A. State Payload Structure
-The OAuth `state` parameter is passed as a signed or base64url-encoded JSON object:
-```json
-{
-  "csrf": "random-secure-token",
-  "returnTo": "https://deploy-preview-42--yoto-tools.netlify.app/callback"
-}
-```
-
-### B. Canonical Callback Relay Security & Threat Analysis
-When `https://yoto-tools.netlify.app/callback` receives the redirect:
-1. It inspects `state.returnTo`.
-2. **Origin Whitelist Verification:** It strictly validates that `returnTo` matches either:
-   - `^https:\/\/deploy-preview-[0-9]+--yoto-tools\.netlify\.app\/callback$`
-   - `^http:\/\/localhost:[0-9]+\/callback$`
-   - Or its own production domain.
-3. If valid, the canonical page immediately bounces the browser to the target preview URL with the `code` and `state` parameters intact.
-4. The PR preview receives the code, retrieves its local `code_verifier`, and performs the token exchange.
-
-#### Threat Model & Security Evaluation
-- **Netlify Subdomain Namespace:** Netlify uses the double-hyphen (`--`) as an internal structural delimiter to separate context identifiers (`deploy-preview-123`) from registered site subdomains (`yoto-tools.netlify.app`). This prevents standard custom site registrations from colliding with deploy preview domains.
-- **PKCE (RFC 7636) as the Definitive Security Backstop:**
-  Even if an adversary were theoretically able to register a lookalike domain matching the regex, **authorization code interception does not lead to credential or token theft**. 
-  - The OAuth authorization code is useless without the corresponding plaintext `code_verifier`.
-  - The `code_verifier` is generated cryptographically in the user's browser session on the initiating PR preview and stored strictly in local memory (`sessionStorage`). It is never transmitted across the network during authorization or redirect steps.
-  - When the attacker or rogue site attempts to exchange the stolen `code` at `https://login.yotoplay.com/oauth/token`, Auth0 requires the matching `code_verifier` that hashes to the initial `code_challenge`. The exchange will fail unconditionally.
-- **Evaluation of Build-Time Cryptographic Signing:**
-  We evaluated signing `returnTo` URLs with an asymmetric private key during GitHub Actions CI and verifying the signature with a bundled public key on production. While cryptographically sound, this approach introduces unnecessary build pipeline friction (secret management, signing scripts, key rotation) with no measurable security improvement over standard PKCE. Consequently, this complexity was rejected in favor of strict origin regex validation backed by native PKCE guarantees.
 
 ---
 

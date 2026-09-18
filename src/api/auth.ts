@@ -11,7 +11,6 @@ const STORAGE_KEY_SESSION = 'yoto_auth_session';
 const STORAGE_KEY_VERIFIER = 'yoto_pkce_verifier';
 const STORAGE_KEY_STATE = 'yoto_oauth_state';
 
-const CANONICAL_PROD_ORIGIN = 'https://yoto-tools.netlify.app';
 
 export const OIDC_SCOPES = ['openid', 'profile', 'email'];
 export const API_SCOPES = [
@@ -112,29 +111,11 @@ export class AuthService {
     const challenge = await generateCodeChallenge(verifier);
     const csrf = generateRandomString(16);
 
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const isProd = window.location.origin === CANONICAL_PROD_ORIGIN;
-
-    // Save verifier and state in sessionStorage (or localStorage)
+    // Save verifier and state in sessionStorage
     sessionStorage.setItem(STORAGE_KEY_VERIFIER, verifier);
     sessionStorage.setItem(STORAGE_KEY_STATE, csrf);
 
-    let redirectUri = `${window.location.origin}/callback`;
-    let statePayload = csrf;
-
-    // RFC 007 PR Preview Relay Redirect:
-    // If not localhost and not prod (i.e. PR preview: deploy-preview-X--yoto-tools.netlify.app),
-    // we route through the canonical callback and encode return destination in state.
-    if (!isLocalhost && !isProd) {
-      redirectUri = `${CANONICAL_PROD_ORIGIN}/callback`;
-      statePayload = btoa(
-        JSON.stringify({
-          csrf,
-          returnTo: `${window.location.origin}/callback`,
-        })
-      );
-    }
-
+    const redirectUri = `${window.location.origin}/callback`;
     const clientId = getActiveClientId();
     const authorizeUrl = new URL(`https://${CONFIG.auth0Domain}/authorize`);
     authorizeUrl.searchParams.set('response_type', 'code');
@@ -144,13 +125,13 @@ export class AuthService {
     authorizeUrl.searchParams.set('redirect_uri', redirectUri);
     authorizeUrl.searchParams.set('code_challenge', challenge);
     authorizeUrl.searchParams.set('code_challenge_method', 'S256');
-    authorizeUrl.searchParams.set('state', statePayload);
+    authorizeUrl.searchParams.set('state', csrf);
 
     window.location.href = authorizeUrl.toString();
   }
 
   /**
-   * Completes OAuth code exchange. Handles canonical relay forwarding if triggered on canonical prod.
+   * Completes OAuth code exchange.
    */
   public async handleCallback(urlSearchParams: URLSearchParams): Promise<boolean> {
     const code = urlSearchParams.get('code');
@@ -158,28 +139,6 @@ export class AuthService {
 
     if (!code || !state) {
       throw new Error('Missing code or state parameter in OAuth callback.');
-    }
-
-    // Check if this is a canonical relay redirect payload per RFC 007
-    try {
-      const decodedState = JSON.parse(atob(state));
-      if (decodedState && typeof decodedState.returnTo === 'string') {
-        const returnTo = decodedState.returnTo;
-        // Verify whitelist: deploy-preview-* or localhost
-        const isValidPreview = /^https:\/\/deploy-preview-[0-9]+--yoto-tools\.netlify\.app\/callback$/.test(returnTo);
-        const isValidLocal = /^http:\/\/localhost:[0-9]+\/callback$/.test(returnTo);
-
-        if (isValidPreview || isValidLocal) {
-          // Relay bounce back to target PR preview
-          const forwardUrl = new URL(returnTo);
-          forwardUrl.searchParams.set('code', code);
-          forwardUrl.searchParams.set('state', decodedState.csrf);
-          window.location.href = forwardUrl.toString();
-          return false;
-        }
-      }
-    } catch {
-      // Not a base64 encoded JSON state, regular state string
     }
 
     // Verify CSRF state
@@ -194,12 +153,7 @@ export class AuthService {
     }
 
     const clientId = getActiveClientId();
-    // Use current origin as redirect_uri for token exchange
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const isProd = window.location.origin === CANONICAL_PROD_ORIGIN;
-    const redirectUri = (!isLocalhost && !isProd)
-      ? `${CANONICAL_PROD_ORIGIN}/callback`
-      : `${window.location.origin}/callback`;
+    const redirectUri = `${window.location.origin}/callback`;
 
     const bodyParams = new URLSearchParams();
     bodyParams.set('grant_type', 'authorization_code');
