@@ -60,10 +60,10 @@ To avoid sharing the CLI tool's client credentials and to support browser-based 
 3. **Application Type:** Select **Public Client** *(handles authentication on client side)*.
 4. **Allowed Callback URLs:**
    ```text
-   https://yoto-tools.netlify.app/callback, http://localhost:5173/callback
+   https://yoto-tools.netlify.app/callback, http://localhost:5173/callback, https://deploy-preview-*--yoto-tools.netlify.app/callback
    ```
-   > **Why Staging / PR Preview URLs Don't Need to Be Listed Here:**  
-   > Yoto's portal strictly disallows wildcards (like `deploy-preview-*`). Per **[RFC 007](007-oauth-client-id-and-pr-preview-redirects.md)**, `yoto-tools` implements a **Canonical Callback Relay**. When a user logs in from any PR preview (e.g. `https://deploy-preview-42--yoto-tools.netlify.app`), the login request specifies `redirect_uri=https://yoto-tools.netlify.app/callback` with a return destination encoded into the OAuth `state`. The canonical production `/callback` page validates the origin and immediately forwards the browser back to the PR preview, where the PKCE `code_verifier` completes the token exchange. Thus, only the canonical production URL and localhost need to be registered!
+   > **Note on Staging / PR Preview URLs:**  
+   > The Yoto Developer Portal (backed by Auth0) supports wildcard subdomains. Registering `https://deploy-preview-*--yoto-tools.netlify.app/callback` allows every ephemeral pull request preview to authenticate directly with PKCE and receive CORS authorization headers without requiring production relay bounces.
 5. **Allowed Logout URLs:**
    ```text
    https://yoto-tools.netlify.app, http://localhost:5173

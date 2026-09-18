@@ -1,0 +1,40 @@
+# ==============================================================================
+# Netlify Configuration for yoto-tools
+# See: docs/rfcs/001-hosting-and-staging-strategy.md
+#      docs/rfcs/003-client-spa-and-routing-strategy.md
+#      docs/rfcs/004-asset-bundling-and-cache-busting.md
+# ==============================================================================
+
+[build]
+  publish = "dist"
+
+# 1. Missing Asset Guard: Any non-existent asset request under /assets/* immediately
+#    returns a real 404 rather than falling through to index.html (which would cause
+#    MIME-type errors on broken scripts or images). Physical disk assets always serve directly.
+[[redirects]]
+  from = "/assets/*"
+  to = "/404.html"
+  status = 404
+
+# 2. SPA Single-Entrypoint Fallback: Any other non-file request routes to index.html
+#    with HTTP 200, allowing @lit-labs/router to parse and render dynamic view paths.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 3. Root HTML shell: Never cache permanently; always revalidate with origin
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# 4. Fingerprinted immutable assets (JS bundle, fonts, icons, icon JSON):
+#    Cache immutably for 1 year in browser and edge CDN
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
