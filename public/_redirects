@@ -1,5 +1,0 @@
-# Missing Asset Guard: Any non-existent asset request under /assets/* immediately returns 404
-/assets/*    /404.html    404
-
-# SPA Fallback: Any other path routes to index.html with 200
-/*           /index.html  200
