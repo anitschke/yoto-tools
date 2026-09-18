@@ -47,6 +47,7 @@ export class YtProgressBar extends LitElement {
 
   @property({ type: Number }) value = 0; // 0 to 100
   @property({ type: Boolean }) indeterminate = false;
+  @property({ type: String, attribute: 'aria-label' }) accessibleLabel = 'Progress';
 
   override render() {
     const clamped = Math.max(0, Math.min(100, this.value));
@@ -54,6 +55,7 @@ export class YtProgressBar extends LitElement {
       <div
         class="progress-container"
         role="progressbar"
+        aria-label=${this.accessibleLabel || 'Progress'}
         aria-valuenow=${this.indeterminate ? '' : clamped}
         aria-valuemin="0"
         aria-valuemax="100"

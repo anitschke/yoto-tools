@@ -91,6 +91,9 @@ export class YtNumberInput extends LitElement {
   @property({ type: Number }) max = 100;
   @property({ type: Number }) step = 1;
   @property({ type: Boolean }) disabled = false;
+  @property({ type: String, attribute: 'aria-label' }) accessibleLabel = '';
+
+  private inputId = `yt-number-${Math.random().toString(36).substring(2, 9)}`;
 
   private updateValue(val: number) {
     const clamped = Math.max(this.min, Math.min(this.max, val));
@@ -119,7 +122,7 @@ export class YtNumberInput extends LitElement {
   override render() {
     return html`
       <div class="wrapper">
-        ${this.label ? html`<label>${this.label}</label>` : ''}
+        ${this.label ? html`<label for=${this.inputId}>${this.label}</label>` : ''}
         <div class="stepper-container">
           <button
             type="button"
@@ -130,11 +133,13 @@ export class YtNumberInput extends LitElement {
             -
           </button>
           <input
+            id=${this.inputId}
             type="number"
             .value=${String(this.value)}
             min=${this.min}
             max=${this.max}
             step=${this.step}
+            aria-label=${this.accessibleLabel || this.label || 'Number input'}
             ?disabled=${this.disabled}
             @change=${this.onInput}
           />

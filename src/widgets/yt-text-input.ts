@@ -91,6 +91,9 @@ export class YtTextInput extends LitElement {
   @property({ type: Boolean }) clearable = false;
   @property({ type: Boolean }) disabled = false;
   @property({ type: String }) error = '';
+  @property({ type: String, attribute: 'aria-label' }) accessibleLabel = '';
+
+  private inputId = `yt-input-${Math.random().toString(36).substring(2, 9)}`;
 
   private onInput(e: Event) {
     const input = e.target as HTMLInputElement;
@@ -113,13 +116,15 @@ export class YtTextInput extends LitElement {
   override render() {
     return html`
       <div class="wrapper">
-        ${this.label ? html`<label>${this.label}</label>` : ''}
+        ${this.label ? html`<label for=${this.inputId}>${this.label}</label>` : ''}
         <div class="input-container ${this.error ? 'error' : ''}">
           <slot name="leading"></slot>
           <input
+            id=${this.inputId}
             type=${this.type}
             .value=${this.value}
             placeholder=${this.placeholder}
+            aria-label=${this.accessibleLabel || this.label || this.placeholder || 'Text input'}
             ?disabled=${this.disabled}
             @input=${this.onInput}
             @change=${this.onChange}

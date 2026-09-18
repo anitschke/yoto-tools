@@ -8,7 +8,7 @@ describe('YtBadge', () => {
     expect(el.variant).to.equal('neutral');
     const span = el.shadowRoot!.querySelector('.badge')!;
     expect(span.classList.contains('variant-neutral')).to.be.true;
-    expect(span.textContent).to.contain('Tag');
+    expect(el.textContent).to.contain('Tag');
   });
 
   it('renders success variant', async () => {

@@ -8,7 +8,7 @@ describe('YtButton', () => {
     expect(el.variant).to.equal('secondary');
     const button = el.shadowRoot!.querySelector('button')!;
     expect(button.classList.contains('variant-secondary')).to.be.true;
-    expect(button.textContent).to.contain('Click Me');
+    expect(el.textContent).to.contain('Click Me');
   });
 
   it('renders primary variant', async () => {

@@ -27,6 +27,12 @@ jobs:
         run: |
           npm run typecheck
 
+      - name: Install Playwright Browsers for WTR
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Component Unit Tests
+        run: npm run test:unit
+
   # Deploy to preview/staging or production.
   # For PRs, this job is gated behind a GitHub Environment ('staging-preview')
   # requiring explicit manual review and approval by the maintainer.
