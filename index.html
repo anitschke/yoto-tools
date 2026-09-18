@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Content Security Policy (CSP) per RFC 016
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'none';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline';
+        font-src 'self';
+        img-src 'self' data: https://api.yotoplay.com https://card-content.yotoplay.com https://*.prxu.org https://*.podtrac.com;
+        media-src 'self' blob: https://secure-media.yotoplay.com https://*.prxu.org https://*.podtrac.com;
+        connect-src 'self'
+          https://login.yotoplay.com
+          https://api.yotoplay.com
+          https://*.s3.amazonaws.com
+          https://*.s3.*.amazonaws.com
+          wss://*.iot.eu-west-2.amazonaws.com
+          https://corsproxy.io
+          https://www.google-analytics.com;
+        base-uri 'self';
+        form-action 'none';
+      "
+    />
+    <title>Yoto Tools</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: var(--yt-font-family, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+        background-color: var(--yt-color-surface-subtle, #f8f9fa);
+        color: var(--yt-color-text, #1a202c);
+      }
+    </style>
+  </head>
+  <body>
+    <yt-app></yt-app>
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+</html>
