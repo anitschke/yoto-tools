@@ -62,7 +62,6 @@ A strict Content Security Policy is injected into the `<head>` of `index.html`:
       https://login.yotoplay.com
       https://api.yotoplay.com
       https://*.s3.amazonaws.com
-      https://*.s3.*.amazonaws.com
       wss://*.iot.eu-west-2.amazonaws.com
       https://corsproxy.io
       https://www.google-analytics.com;
