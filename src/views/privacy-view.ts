@@ -102,9 +102,15 @@ export class YtPrivacyView extends LitElement {
 
         <h3>3. Minimal Anonymous Telemetry</h3>
         <p>
-          We use cookieless Google Analytics 4 Measurement Protocol pings solely to count aggregate page views and
-          detect browser compatibility errors, stripped of IP addresses and query strings.
+          We use cookieless Google Analytics 4 Measurement Protocol pings solely to improve the app and understand feature usage. Specifically, we collect:
         </p>
+        <ul>
+          <li><strong>Page Views & Navigation:</strong> Aggregate visits to application routes (without query parameters or personal IDs).</li>
+          <li><strong>Icon Usage:</strong> Icons that you add or set on cards (e.g. icon IDs and search terms, to identify popular icons).</li>
+          <li><strong>Podcast RSS Imports:</strong> Podcast RSS URLs you import (to identify popular public feeds and improve feed compatibility).</li>
+          <li><strong>Local Audio Imports:</strong> When you import files from your computer (strictly logging the fact that you used the feature and aggregate track counts, but never file names or personal ID3 tags).</li>
+          <li><strong>Device Control Actions:</strong> Generic control commands invoked (e.g. play, pause, volume changes, but never device IDs or serial numbers).</li>
+        </ul>
       </div>
     `;
   }
