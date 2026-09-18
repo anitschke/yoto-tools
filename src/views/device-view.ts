@@ -68,9 +68,25 @@ export class YtDeviceView extends LitElement {
   @state() private devices: Device[] = [];
   @state() private loading = true;
 
+  private onAuthChanged = () => {
+    this.requestUpdate();
+    if (authService.isAuthenticated()) {
+      this.loadDevices();
+    } else {
+      this.devices = [];
+      this.loading = false;
+    }
+  };
+
   override async connectedCallback() {
     super.connectedCallback();
+    window.addEventListener('yt-auth-changed', this.onAuthChanged);
     await this.loadDevices();
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('yt-auth-changed', this.onAuthChanged);
   }
 
   private async loadDevices() {

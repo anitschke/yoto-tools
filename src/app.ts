@@ -96,6 +96,10 @@ export class YtApp extends LitElement {
 
   @state() private isAuthenticated = false;
 
+  private onAuthChanged = () => {
+    this.isAuthenticated = authService.isAuthenticated();
+  };
+
   private router = new Router(this, [
     {
       path: '/',
@@ -122,6 +126,14 @@ export class YtApp extends LitElement {
   override connectedCallback() {
     super.connectedCallback();
     this.isAuthenticated = authService.isAuthenticated();
+    window.addEventListener('yt-auth-changed', this.onAuthChanged);
+    window.addEventListener('popstate', this.onAuthChanged);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('yt-auth-changed', this.onAuthChanged);
+    window.removeEventListener('popstate', this.onAuthChanged);
   }
 
   private navigate(path: string, e?: Event) {

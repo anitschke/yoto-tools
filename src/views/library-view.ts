@@ -102,9 +102,25 @@ export class YtLibraryView extends LitElement {
   @state() private searchQuery = '';
   @state() private loading = true;
 
+  private onAuthChanged = () => {
+    this.requestUpdate();
+    if (authService.isAuthenticated()) {
+      this.loadCards();
+    } else {
+      this.cards = [];
+      this.loading = false;
+    }
+  };
+
   override async connectedCallback() {
     super.connectedCallback();
+    window.addEventListener('yt-auth-changed', this.onAuthChanged);
     await this.loadCards();
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('yt-auth-changed', this.onAuthChanged);
   }
 
   private async loadCards() {

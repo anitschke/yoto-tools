@@ -59,6 +59,22 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
   return base64UrlEncode(digest);
 }
 
+export interface AuthChangedDetail {
+  authenticated: boolean;
+  session: AuthSession | null;
+}
+
+export class AuthStateChangedEvent extends CustomEvent<AuthChangedDetail> {
+  static readonly EVENT_NAME = 'yt-auth-changed';
+  constructor(detail: AuthChangedDetail) {
+    super(AuthStateChangedEvent.EVENT_NAME, {
+      bubbles: true,
+      composed: true,
+      detail,
+    });
+  }
+}
+
 export class AuthService {
   private session: AuthSession | null = null;
 
@@ -80,6 +96,17 @@ export class AuthService {
     return Date.now() < session.expiresAt - 60000;
   }
 
+  private notifyAuthChanged(): void {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new AuthStateChangedEvent({
+          authenticated: this.isAuthenticated(),
+          session: this.session,
+        })
+      );
+    }
+  }
+
   private loadSession(): void {
     const raw = localStorage.getItem(STORAGE_KEY_SESSION);
     if (raw) {
@@ -95,11 +122,13 @@ export class AuthService {
   public saveSession(session: AuthSession): void {
     this.session = session;
     localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(session));
+    this.notifyAuthChanged();
   }
 
   public clearSession(): void {
     this.session = null;
     localStorage.removeItem(STORAGE_KEY_SESSION);
+    this.notifyAuthChanged();
   }
 
   /**
