@@ -11,3 +11,4 @@ export * from './yt-dropdown.js';
 export * from './yt-dialog.js';
 export * from './yt-toast.js';
 export * from './yt-toast-manager.js';
+export * from './yt-please-sign-in.js';

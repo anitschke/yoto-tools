@@ -48,3 +48,6 @@ The `<yt-toast>` component renders an individual ephemeral or persistent notific
 
 ### 10. Toast Manager (`<yt-toast-manager>`) — `src/widgets/yt-toast-manager.ts`
 The `<yt-toast-manager>` component acts as the global notification orchestrator mounted at the top-level application shell. It listens for custom `yt-toast` DOM bubbling events dispatched from any view, service, or nested component. It maintains the active notification queue, automatically dismissing timed notifications while leaving critical errors persistent until acknowledged. The manager renders an accessible ARIA live region (`aria-live="polite"` or `assertive`) so screen readers announce notifications in real time.
+
+### 11. Please Sign In Prompt (`<yt-please-sign-in>`) — `src/widgets/yt-please-sign-in.ts`
+The `<yt-please-sign-in>` component renders a standardized empty-state prompt displayed across pages when the user is not signed in. It presents customizable heading and description messaging centered in a card surface alongside a primary "Sign In with Yoto" button. Clicking the button initiates the PKCE OAuth login redirect via `authService.login()`. It ensures a consistent, accessible authentication prompt across views such as library, editor, and device management.

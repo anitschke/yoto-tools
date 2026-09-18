@@ -17,12 +17,12 @@ export const CONFIG: AppConfig = {
   // Public Auth0 Client ID (RFC 007, RFC 019).
   // Injected by Vite from env vars or defaults to public registered SPA client ID.
   yotoClientId:
-    (import.meta.env.VITE_YOTO_CLIENT_ID as string) ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_YOTO_CLIENT_ID) ||
     'GCSGaMOObJ0SHBS5dT56dOJoVXw5ep4A',
 
   // Public GA4 Measurement ID (RFC 015, RFC 019).
   gaMeasurementId:
-    (import.meta.env.VITE_GA_MEASUREMENT_ID as string) ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GA_MEASUREMENT_ID) ||
     'G-N62YNCXWPS',
 
   // Yoto Auth0 & REST API endpoints

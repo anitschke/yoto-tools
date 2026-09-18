@@ -131,11 +131,10 @@ export class YtLibraryView extends LitElement {
   override render() {
     if (!authService.isAuthenticated()) {
       return html`
-        <div class="empty-state">
-          <h3>Please Sign In</h3>
-          <p>Sign in with your Yoto account to access your cards and library.</p>
-          <yt-button variant="primary" @click=${() => authService.login()}>Sign In with Yoto</yt-button>
-        </div>
+        <yt-please-sign-in
+          heading="Please Sign In"
+          description="Sign in with your Yoto account to access your cards and library."
+        ></yt-please-sign-in>
       `;
     }
 

@@ -93,10 +93,10 @@ export class YtDeviceView extends LitElement {
   override render() {
     if (!authService.isAuthenticated()) {
       return html`
-        <div class="empty-state">
-          <h3>Please Sign In</h3>
-          <p>Sign in to see and control your Yoto players.</p>
-        </div>
+        <yt-please-sign-in
+          heading="Please Sign In"
+          description="Sign in with your Yoto account to see and control your Yoto players."
+        ></yt-please-sign-in>
       `;
     }
 
