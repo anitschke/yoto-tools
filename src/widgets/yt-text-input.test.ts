@@ -1,6 +1,6 @@
 import { html, fixture, expect, oneEvent } from '@open-wc/testing';
-import { YtTextInput } from '../../src/widgets/yt-text-input.js';
-import '../../src/widgets/yt-text-input.js';
+import { YtTextInput } from './yt-text-input.js';
+import './yt-text-input.js';
 
 describe('YtTextInput', () => {
   it('renders input with label and placeholder', async () => {

@@ -1,6 +1,6 @@
 import { html, fixture, expect } from '@open-wc/testing';
-import { YtBadge } from '../../src/widgets/yt-badge.js';
-import '../../src/widgets/yt-badge.js';
+import { YtBadge } from './yt-badge.js';
+import './yt-badge.js';
 
 describe('YtBadge', () => {
   it('renders default neutral variant', async () => {

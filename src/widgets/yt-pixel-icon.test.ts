@@ -1,6 +1,6 @@
 import { html, fixture, expect } from '@open-wc/testing';
-import { YtPixelIcon } from '../../src/widgets/yt-pixel-icon.js';
-import '../../src/widgets/yt-pixel-icon.js';
+import { YtPixelIcon } from './yt-pixel-icon.js';
+import './yt-pixel-icon.js';
 
 describe('YtPixelIcon', () => {
   it('renders fallback when src is empty', async () => {

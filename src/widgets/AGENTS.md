@@ -13,7 +13,7 @@ All components in this directory adhere to the architectural specifications defi
    - All custom elements must be prefixed with `yt-` (e.g., `<yt-button>`, `<yt-dialog>`, `<yt-pixel-icon>`).
    - All CSS custom properties must be prefixed with `--yt-` (defined in [`src/widgets/theme.css.ts`](file:///home/anitschk/sandbox/yoto-tools/src/widgets/theme.css.ts)).
 3. **Keep Views Free of Ad-hoc Primitives:** If a component is missing, build it here first, write tests for it, document it in this catalog, and then consume it in the view.
-4. **Automated Testing:** Every widget must have a companion `.test.ts` file run via `@web/test-runner` verifying slot projection, custom event dispatch, keyboard navigation, and accessibility (`axe-core`).
+4. **Automated Testing & Co-location:** Every widget must have a companion `.test.ts` file located **directly next to the source file in this directory** (e.g. `src/widgets/yt-button.test.ts` next to `src/widgets/yt-button.ts`), run via `@web/test-runner` verifying slot projection, custom event dispatch, keyboard navigation, and accessibility (`axe-core`).
 
 ---
 

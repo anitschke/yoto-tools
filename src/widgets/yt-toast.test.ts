@@ -1,6 +1,6 @@
 import { html, fixture, expect, oneEvent } from '@open-wc/testing';
-import { YtToast } from '../../src/widgets/yt-toast.js';
-import '../../src/widgets/yt-toast.js';
+import { YtToast } from './yt-toast.js';
+import './yt-toast.js';
 
 describe('YtToast', () => {
   it('renders message and variant class', async () => {

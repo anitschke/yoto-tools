@@ -1,6 +1,6 @@
 import { html, fixture, expect } from '@open-wc/testing';
-import { YtProgressBar } from '../../src/widgets/yt-progress-bar.js';
-import '../../src/widgets/yt-progress-bar.js';
+import { YtProgressBar } from './yt-progress-bar.js';
+import './yt-progress-bar.js';
 
 describe('YtProgressBar', () => {
   it('renders determinate bar with correct width and aria attributes', async () => {

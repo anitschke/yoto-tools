@@ -1,6 +1,6 @@
 import { html, fixture, expect, oneEvent } from '@open-wc/testing';
-import { YtNumberInput } from '../../src/widgets/yt-number-input.js';
-import '../../src/widgets/yt-number-input.js';
+import { YtNumberInput } from './yt-number-input.js';
+import './yt-number-input.js';
 
 describe('YtNumberInput', () => {
   it('renders initial value and stepper buttons', async () => {

@@ -1,6 +1,6 @@
 import { html, fixture, expect, oneEvent } from '@open-wc/testing';
-import { YtDropdown } from '../../src/widgets/yt-dropdown.js';
-import '../../src/widgets/yt-dropdown.js';
+import { YtDropdown } from './yt-dropdown.js';
+import './yt-dropdown.js';
 
 describe('YtDropdown', () => {
   const options = [

@@ -1,6 +1,6 @@
 import { html, fixture, expect } from '@open-wc/testing';
-import { YtButton } from '../../src/widgets/yt-button.js';
-import '../../src/widgets/yt-button.js';
+import { YtButton } from './yt-button.js';
+import './yt-button.js';
 
 describe('YtButton', () => {
   it('renders with default secondary variant', async () => {

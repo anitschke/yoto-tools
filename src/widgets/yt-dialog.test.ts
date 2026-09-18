@@ -1,6 +1,6 @@
 import { html, fixture, expect, oneEvent } from '@open-wc/testing';
-import { YtDialog } from '../../src/widgets/yt-dialog.js';
-import '../../src/widgets/yt-dialog.js';
+import { YtDialog } from './yt-dialog.js';
+import './yt-dialog.js';
 
 describe('YtDialog', () => {
   it('opens native dialog via showModal()', async () => {

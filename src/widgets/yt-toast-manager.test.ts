@@ -1,7 +1,7 @@
 import { html, fixture, expect } from '@open-wc/testing';
-import { ToastNotificationEvent } from '../../src/widgets/events.js';
-import { YtToastManager } from '../../src/widgets/yt-toast-manager.js';
-import '../../src/widgets/yt-toast-manager.js';
+import { ToastNotificationEvent } from './events.js';
+import { YtToastManager } from './yt-toast-manager.js';
+import './yt-toast-manager.js';
 
 describe('YtToastManager', () => {
   it('enqueues toast when ToastNotificationEvent is dispatched', async () => {
