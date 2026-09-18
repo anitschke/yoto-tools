@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production build outputs
+dist/
+dist-ssr/
+*.local
+
+# Environment & Secrets (Never commit secrets or credentials)
+.env*.local
+.env
+.env.*
+
+# Playwright / Testing outputs
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Vite & Tooling cache
+.vite/
+.cache/
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

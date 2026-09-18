@@ -125,6 +125,16 @@ Automated end-to-end tests run in CI against deploy previews to verify the OAuth
    - **Never** add payment methods, credit cards, or Yoto Club subscriptions to this test account.
    - **Never** pair a primary physical child player to this account.
    - Create 1 or 2 sample empty Make-Your-Own (MYO) playlists on the account so the test suite has cards to list.
+4. **Local E2E Test Execution (`.env.test.local`):**
+   - For developers wishing to run Playwright E2E tests on their local machine (`npm run test:e2e`), create a strictly git-ignored file named `.env.test.local`:
+     ```ini
+     # .env.test.local (strictly git-ignored)
+     TARGET_URL=http://localhost:5173
+     YOTO_TEST_ACCOUNT_EMAIL=yourname+yototest@example.com
+     YOTO_TEST_ACCOUNT_PASSWORD=your_secure_test_password
+     ```
+   - Playwright's test runner (`playwright.config.ts`) automatically loads `.env.test.local` if present, while CI injects `YOTO_TEST_ACCOUNT_*` directly from GitHub Actions Secrets.
+   - If this file is absent locally, `npm run test:unit` and standard component tests still run and pass; only live end-to-end integration tests that authenticate against Yoto's server are skipped or require these variables.
 
 ---
 
