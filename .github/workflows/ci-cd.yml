@@ -72,6 +72,7 @@ jobs:
         uses: nwtgck/actions-netlify@v3
         with:
           publish-dir: './dist'
+          netlify-config-path: './netlify.toml'
           production-branch: main
           alias: ${{ github.event_name == 'pull_request' && format('deploy-preview-{0}', github.event.number) || '' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
