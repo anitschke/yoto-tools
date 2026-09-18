@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  statuses: write
 
 jobs:
   # Unit testing & linting runs on PRs without needing production secrets
@@ -79,6 +80,7 @@ jobs:
           deploy-message: "Deploy from GitHub Actions #${{ github.run_number }}"
           enable-pull-request-comment: true
           enable-commit-comment: false
+          enable-commit-status: true
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
