@@ -12,12 +12,12 @@ This proposal defines how OAuth 2.0 authentication is configured across environm
 
 ---
 
-## 2. The PR Preview Redirect Challenge
+## 2. Multi-Environment Redirect Configuration
 
-Yoto's developer dashboard requires explicit whitelisting of exact callback URLs:
-- **Production Callback URL:** `https://yoto-tools.netlify.app/callback`
-- **Localhost Callback URL:** `http://localhost:5173/callback`
-- **Dynamic PR Previews:** Netlify generates unique, ephemeral subdomains for every PR (e.g. `https://deploy-preview-42--yoto-tools.netlify.app`). Yoto's developer portal does not allow wildcard redirect URIs (`https://deploy-preview-*...`).
+Authentication in `yoto-tools` must work across multiple distinct environments:
+- **Production Canonical URL:** `https://yoto-tools.netlify.app/callback`
+- **Localhost Development URL:** `http://localhost:5173/callback`
+- **Dynamic PR Previews:** Netlify generates unique, ephemeral subdomains for every PR (e.g. `https://deploy-preview-42--yoto-tools.netlify.app`). To support these without manually registering hundreds of URLs, the Yoto Developer Portal (backed by Auth0) supports wildcard subdomains in **Allowed Callback URLs** (`https://deploy-preview-*--yoto-tools.netlify.app/callback`).
 
 ---
 
