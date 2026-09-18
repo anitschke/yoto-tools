@@ -28,7 +28,29 @@ Because the service is funded through donations (Ko-fi) and operated as a person
 
 ---
 
-## 3. Data Ingestion Architecture
+## 3. Data Ingestion Architecture & `IconProvider` Implementation
+
+The community provider implements the standard `IconProvider` interface defined in [RFC 011](011-inverted-icon-index-and-search.md):
+
+```typescript
+// tools/icons/yotoicons-community-provider.ts
+import { IconProvider, IconsSyncResult, RawIconItem } from './types.js';
+
+export interface YotoIconsMetadata {
+  highestKnownId: number; // Largest community icon ID successfully ingested
+}
+
+export class YotoIconsCommunityProvider implements IconProvider<YotoIconsMetadata> {
+  readonly name = 'yotoicons.com';
+
+  async fetchIcons(existingMetadata?: YotoIconsMetadata): Promise<IconsSyncResult<YotoIconsMetadata>> {
+    // 1. Check https://yotoicons.com/icons?sort=new&page=1
+    // 2. Terminate the moment an encountered ID is <= existingMetadata?.highestKnownId
+    // 3. Incrementally fetch newly published icons and raw image bytes
+    // 4. Return { icons: newIcons, metadata: { highestKnownId: newMaxId } }
+  }
+}
+```
 
 ### A. One-Time Baseline Ingestion
 If authorized by the maintainer, an offline synchronization script will crawl the paginated catalog:
@@ -40,13 +62,13 @@ If authorized by the maintainer, an offline synchronization script will crawl th
   - `description`: Supplemental tags / keywords (e.g. `Bluey Book Reads`).
   - `artist`: Username of the creator (e.g. `curiouscat`).
   - `downloads`: Community popularity metric.
-- **Image Assets:** Images are retrieved from `/static/uploads/{id}.png` and stored locally. Total size for all 25,000 16×16 PNG icons is only ~8–12 MB.
+- **Image Assets:** Images are retrieved from `/static/uploads/{id}.png`, hashed, and saved locally as `public/assets/icons/[hash].png`. Total size for all 25,000 16×16 PNG icons is only ~8–12 MB.
 
-### B. Minimal Incremental Sync Strategy
+### B. Minimal Incremental Sync Strategy (GitHub Actions Cron)
 To keep the index up to date without repeatedly crawling the entire site:
 1. The catalog provides a sort-by-newest view: `https://yotoicons.com/icons?sort=new&page=1`.
-2. A scheduled build task (e.g. monthly GitHub Actions cron) checks page 1.
-3. The scraper compares IDs against our local index.
+2. The scheduled GitHub Actions cron (`.github/workflows/sync-icons.yml`) checks page 1.
+3. The provider compares IDs against the local `src/data/icons.json`.
 4. **Early Termination:** The moment an ID is encountered that is $\le$ the highest known ID in our local database, the sync stops immediately.
 5. **Server Impact:** Under normal conditions, checking for updates requires only **1 to 2 HTTP requests** (a few kilobytes of HTML) and downloading only newly created icons.
 
@@ -54,12 +76,12 @@ To keep the index up to date without repeatedly crawling the entire site:
 
 ## 4. Index Merging & Client-Side Delivery
 
-- **Unified Inverted Index:** The extracted icons and tags will be merged alongside Google Noto Emoji and official Yoto icons into the consolidated `icons.[hash].json` bundle.
+- **Checked-in Static Storage:** All synced assets are committed directly to `public/assets/icons/` and `src/data/icons.json`, preserving instant local development and CI/CD builds.
 - **Provider Attribution & Filtering:**
   - Icons will retain creator credit (`artist`) and provider tags (`provider: "yotoicons.com"`).
   - The UI icon picker will include a provider filter toggle, allowing users to search specifically within Yoto official, Noto Emoji, or community icons.
 - **Content-Addressable Asset Serving:**
-  - Downloaded icons will be fingerprinted and served from `/assets/icons/community/{id}.[hash].png` under immutable caching rules as defined in the Asset Bundling RFC.
+  - Downloaded icons will be stored purely by their image hash (`/assets/icons/[hash].png`) under immutable caching rules as defined in the Asset Bundling RFC.
 
 ---
 

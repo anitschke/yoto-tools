@@ -57,7 +57,7 @@ The OAuth `state` parameter is passed as a signed or base64url-encoded JSON obje
 }
 ```
 
-### B. Canonical Callback Relay Security
+### B. Canonical Callback Relay Security & Threat Analysis
 When `https://yoto-tools.netlify.app/callback` receives the redirect:
 1. It inspects `state.returnTo`.
 2. **Origin Whitelist Verification:** It strictly validates that `returnTo` matches either:
@@ -66,6 +66,16 @@ When `https://yoto-tools.netlify.app/callback` receives the redirect:
    - Or its own production domain.
 3. If valid, the canonical page immediately bounces the browser to the target preview URL with the `code` and `state` parameters intact.
 4. The PR preview receives the code, retrieves its local `code_verifier`, and performs the token exchange.
+
+#### Threat Model & Security Evaluation
+- **Netlify Subdomain Namespace:** Netlify uses the double-hyphen (`--`) as an internal structural delimiter to separate context identifiers (`deploy-preview-123`) from registered site subdomains (`yoto-tools.netlify.app`). This prevents standard custom site registrations from colliding with deploy preview domains.
+- **PKCE (RFC 7636) as the Definitive Security Backstop:**
+  Even if an adversary were theoretically able to register a lookalike domain matching the regex, **authorization code interception does not lead to credential or token theft**. 
+  - The OAuth authorization code is useless without the corresponding plaintext `code_verifier`.
+  - The `code_verifier` is generated cryptographically in the user's browser session on the initiating PR preview and stored strictly in local memory (`sessionStorage`). It is never transmitted across the network during authorization or redirect steps.
+  - When the attacker or rogue site attempts to exchange the stolen `code` at `https://login.yotoplay.com/oauth/token`, Auth0 requires the matching `code_verifier` that hashes to the initial `code_challenge`. The exchange will fail unconditionally.
+- **Evaluation of Build-Time Cryptographic Signing:**
+  We evaluated signing `returnTo` URLs with an asymmetric private key during GitHub Actions CI and verifying the signature with a bundled public key on production. While cryptographically sound, this approach introduces unnecessary build pipeline friction (secret management, signing scripts, key rotation) with no measurable security improvement over standard PKCE. Consequently, this complexity was rejected in favor of strict origin regex validation backed by native PKCE guarantees.
 
 ---
 

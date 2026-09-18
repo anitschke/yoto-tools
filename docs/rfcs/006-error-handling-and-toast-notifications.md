@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal establishes the unified error handling, diagnostic logging, and user notification architecture for `yoto-tools`. It defines a decoupled DOM event-driven toast system (`<yoto-toast-manager>`), structured console diagnostics, and automatic silent token refresh handling.
+This proposal establishes the unified error handling, diagnostic logging, and user notification architecture for `yoto-tools`. It defines a decoupled DOM event-driven toast system (`<yt-toast-manager>`), structured console diagnostics, and automatic silent token refresh handling.
 
 ---
 
@@ -21,7 +21,7 @@ sequenceDiagram
     autonumber
     participant Component as Any View / Component
     participant DOM as Document Tree
-    participant ToastMgr as <yoto-toast-manager> (Root Shell)
+    participant ToastMgr as <yt-toast-manager> (Root Shell)
     participant Console as Browser Console
 
     Component->>DOM: dispatchEvent(new ToastEvent({ type: 'error', message: '...', detail: err }))
@@ -42,7 +42,7 @@ export interface ToastOptions {
 }
 
 export class ToastNotificationEvent extends CustomEvent<ToastOptions> {
-  static readonly EVENT_NAME = 'yoto-toast';
+  static readonly EVENT_NAME = 'yt-toast';
   constructor(options: ToastOptions) {
     super(ToastNotificationEvent.EVENT_NAME, {
       bubbles: true,
@@ -53,9 +53,9 @@ export class ToastNotificationEvent extends CustomEvent<ToastOptions> {
 }
 ```
 
-### B. Toast Manager (`<yoto-toast-manager>`)
-Placed at the top-level application shell (`<yoto-app>`):
-- Listens for `yoto-toast` events bubbling up from anywhere in the component hierarchy.
+### B. Toast Manager (`<yt-toast-manager>`)
+Placed at the top-level application shell (`<yt-app>`):
+- Listens for `yt-toast` events bubbling up from anywhere in the component hierarchy.
 - Manages an interactive toast queue with stack animations, accessible ARIA live regions (`aria-live="polite"` or `assertive`), auto-dismiss timers, and action buttons (e.g. "Retry", "Use Fallback").
 
 ---

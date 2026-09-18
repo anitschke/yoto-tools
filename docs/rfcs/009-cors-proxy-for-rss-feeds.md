@@ -39,14 +39,14 @@ flowchart TD
     
     AttemptDirect -->|CORS Headers Present| ParseXML["Parse XML via DOMParser"]
     
-    AttemptDirect -->|CORS Failure / NetworkError| AttemptEdgeRelay["Step 2: Netlify Edge Rewrite Relay"]
+    AttemptDirect -->|CORS Failure / NetworkError| AttemptCorsProxy["Step 2: Fetch via https://corsproxy.io/?url=..."]
     
-    AttemptEdgeRelay -->|Success| ParseXML
-    AttemptEdgeRelay -->|Relay Failed / Unavailable| PromptFallback["Step 3: User Manual Fallback Modal"]
+    AttemptCorsProxy -->|Success| ParseXML
+    AttemptCorsProxy -->|Proxy Failed / Unavailable| PromptFallback["Step 3: User Manual Fallback Modal"]
     
     PromptFallback --> OptionPaste["Option A: Paste raw RSS XML text"]
     PromptFallback --> OptionFile["Option B: Drop downloaded .xml/.rss file"]
-    PromptFallback --> OptionProxy["Option C: User-provided CORS proxy URL"]
+    PromptFallback --> OptionProxy["Option C: User-provided custom CORS proxy URL"]
 
     OptionPaste --> ParseXML
     OptionFile --> ParseXML
@@ -58,7 +58,7 @@ flowchart TD
 ## 4. Implementation Details
 
 ### Tier 1: Direct Browser Fetch
-Some modern podcast platforms (e.g., Spotify for Podcasters, Transistor) do return `Access-Control-Allow-Origin: *`. The client always attempts a direct `fetch()` first:
+Some modern podcast platforms (e.g., Spotify for Podcasters, Transistor) return `Access-Control-Allow-Origin: *`. The client always attempts a direct `fetch()` first:
 ```typescript
 try {
   const resp = await fetch(feedUrl, { signal: AbortSignal.timeout(4000) });
@@ -68,25 +68,23 @@ try {
 }
 ```
 
-### Tier 2: Edge Proxy Rewrite (`netlify.toml`)
-For feeds blocked by CORS, requests are relayed via a same-origin path handled by Netlify edge rewrite rules:
-```toml
-# Netlify edge rewrite rule in netlify.toml
-[[redirects]]
-  from = "/api/rss-proxy/*"
-  to = "https://relay.yoto-tools.workers.dev/:splat"
-  status = 200
-  force = true
+### Tier 2: Free Public CORS Proxy (`https://corsproxy.io/`)
+For feeds blocked by CORS, requests are relayed directly through the free, high-availability [corsproxy.io](https://corsproxy.io/) service by prefixing the target URL:
+```typescript
+const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(feedUrl)}`;
+const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+if (!resp.ok) throw new Error(`Proxy fetch failed: ${resp.status}`);
+const xmlText = await resp.text();
 ```
-- **Same-Origin Route:** The browser requests `https://yoto-tools.netlify.app/api/rss-proxy/?url=...`. Because the request is same-origin, the browser never blocks it.
-- **Relay Mechanism:** The rewrite connects to a lightweight zero-maintenance edge relay (such as a free Cloudflare Worker with 100,000 req/day or CorsProxy.io with domain locking) that strips the CORS restrictions and adds `Access-Control-Allow-Origin: *`.
-- **Zero Heavy Compute:** Because RSS XML files are tiny (30–80 KB), data transit costs and CPU time are negligible.
+- **Zero Configuration & Zero Maintenance:** Eliminates the need to configure, deploy, or maintain custom edge workers or Netlify redirect rewrite proxies.
+- **Lightweight XML Payloads:** Because podcast RSS XML files are tiny text documents (30–80 KB), requests execute in milliseconds and remain well within fair-use limits.
+- **CSP Integration:** `https://corsproxy.io` is whitelisted in our Content Security Policy `connect-src` directive ([RFC 016](016-content-security-policy-and-sri.md)).
 
 ### Tier 3: Zero-Infrastructure Interactive Fallbacks
-If edge proxying is unreachable or throttled:
-1. **Raw XML Paste:** The user can open the feed in their browser, copy the XML, and paste it into a textarea.
-2. **File Drop:** The user can download the `.xml` / `.rss` file and drag it into the app, read instantly via the browser `FileReader` API.
-3. **Custom Proxy URL (BYOK):** Power users can supply their own proxy URL or API key in application settings.
+If both direct fetch and `corsproxy.io` are unreachable or throttled:
+1. **Raw XML Paste:** The user can open the feed URL in their browser tab, copy the raw XML, and paste it into a textarea.
+2. **File Drop:** The user can save/download the `.xml` / `.rss` file and drop it into the application, parsed instantly via the browser `FileReader` API.
+3. **Custom Proxy URL (BYOK):** Advanced users can configure their own proxy URL in application settings.
 
 ---
 

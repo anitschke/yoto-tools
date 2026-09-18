@@ -50,6 +50,7 @@ The application will host a permanent `/privacy` route accessible from the foote
 
 | Event Category | What We Log | What We Omit (Strictly Redacted) |
 | :--- | :--- | :--- |
+| **Page Views** | Route path (`/`, `/cards`, `/import`, `/icons`, `/players`, `/privacy`), Page title | Query parameters containing private IDs, tokens, or hashes |
 | **Icon Usage** | Icon ID (`noto:cat`, `yoto:star`), Search Query (`"bedtime"`) | User ID, Card ID, Playlist Name, Track Title |
 | **Podcast RSS Import** | Feed Domain / Hostname (`feeds.wgbh.org`), Episode count ingested | Private tokens, subscriber URLs, specific personal feeds |
 | **Custom File Uploads** | Batch track count (e.g. `12`), audio codec (`"mp3"`), duration total | Exact filenames, personal ID3 tags (artist, album, voice note names) |
@@ -57,15 +58,25 @@ The application will host a permanent `/privacy` route accessible from the foote
 
 ---
 
-## 5. Technical Implementation (Measurement Protocol API)
+## 5. Technical Implementation (Public GA4 Client Collection Endpoint)
 
-Instead of injecting Google's heavy external `gtag.js` script tag (which tracks users across domains and gets blocked by ad-blockers):
-- A minimal TypeScript service (`src/services/telemetry.ts`) posts JSON payloads directly via `fetch()` or `navigator.sendBeacon()` to GA4's Measurement Protocol endpoint (`https://www.google-analytics.com/mp/collect`):
+Instead of injecting Google's heavy external `gtag.js` script tag (which executes arbitrary remote JavaScript, tracks users across domains, and gets blocked by ad-blockers):
+- A minimal, transparent TypeScript service (`src/services/telemetry.ts`) transmits lightweight event pings directly via `fetch()` or `navigator.sendBeacon()` to Google's public client collection endpoint (`https://www.google-analytics.com/g/collect`).
+- **No `api_secret` Required:** The client endpoint operates exclusively with the public Measurement ID (`G-XXXXXXXXXX`). This eliminates secret management in client code, avoids edge proxy rewrites in `netlify.toml`, and guarantees that no privileged tokens are exposed.
 
 ```typescript
+// src/services/telemetry.ts
+
+const MEASUREMENT_ID = 'G-XXXXXXXXXX'; // Public GA4 Measurement ID
 const STORAGE_KEY_OPT_OUT = 'yoto_telemetry_disabled';
 
+const PRODUCTION_HOSTNAME = 'yoto-tools.netlify.app';
+
 export function isTelemetryDisabled(): boolean {
+  // Automatically disable telemetry on localhost, PR previews, or staging to prevent data pollution
+  if (window.location.hostname !== PRODUCTION_HOSTNAME) {
+    return true;
+  }
   return localStorage.getItem(STORAGE_KEY_OPT_OUT) === 'true';
 }
 
@@ -73,28 +84,47 @@ export function setTelemetryDisabled(disabled: boolean): void {
   localStorage.setItem(STORAGE_KEY_OPT_OUT, String(disabled));
 }
 
-export async function trackEvent(name: string, params: Record<string, string | number | boolean>) {
+// Generates an ephemeral session UUID stored only in sessionStorage (zero cookies)
+function getEphemeralSessionId(): string {
+  let sid = sessionStorage.getItem('yoto_telemetry_sid');
+  if (!sid) {
+    sid = crypto.randomUUID();
+    sessionStorage.setItem('yoto_telemetry_sid', sid);
+  }
+  return sid;
+}
+
+export function trackEvent(name: string, params: Record<string, string | number | boolean> = {}): void {
   if (isTelemetryDisabled()) return;
 
-  const payload = {
-    client_id: getEphemeralSessionId(), // Random session UUID regenerated per session
-    events: [
-      {
-        name,
-        params: {
-          ...params,
-          engagement_time_msec: 100,
-        },
-      },
-    ],
-  };
+  const queryParams = new URLSearchParams({
+    v: '2',                               // GA4 protocol version
+    tid: MEASUREMENT_ID,                  // Target Measurement ID
+    cid: getEphemeralSessionId(),         // Ephemeral client session ID (no cookies)
+    en: name,                             // Event name (e.g. 'page_view', 'icon_search')
+    _p: String(Date.now()),               // Cache buster
+  });
 
-  fetch(`https://www.google-analytics.com/mp/collect?api_secret=${API_SECRET}&measurement_id=${MEASUREMENT_ID}`, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-    keepalive: true,
-  }).catch(() => {
-    // Fail silently without interrupting UI
+  // Attach sanitized custom parameters (prefixed with ep. for GA4 client hits)
+  for (const [key, val] of Object.entries(params)) {
+    queryParams.set(`ep.${key}`, String(val));
+  }
+
+  const endpoint = `https://www.google-analytics.com/g/collect?${queryParams.toString()}`;
+
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(endpoint);
+  } else {
+    fetch(endpoint, { method: 'POST', keepalive: true, mode: 'no-cors' }).catch(() => {
+      // Fail silently without interrupting UI or throwing unhandled rejections
+    });
+  }
+}
+
+export function trackPageView(pagePath: string, pageTitle: string): void {
+  trackEvent('page_view', {
+    page_location: pagePath,
+    page_title: pageTitle,
   });
 }
 ```
