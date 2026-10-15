@@ -76,8 +76,8 @@ Keep storage mechanisms simple, predictable, and tailored to data size:
 - **Audio Tag Extraction:** [`music-metadata-browser`](https://github.com/Borewit/music-metadata-browser).
 - **MQTT over WebSocket:** [`mqtt`](https://github.com/mqttjs/MQTT.js).
 - **Testing:**
-  - **Unit / Component Tests:** [@web/test-runner](https://modern-web.dev/docs/test-runner/overview/) with `@open-wc/testing`.
-  - **End-to-End Tests:** [Playwright](https://playwright.dev/) running against Netlify PR deploy previews and production.
+  - **Unit / Component Tests:** [@web/test-runner](https://modern-web.dev/docs/test-runner/overview/) with `@open-wc/testing`. All unit and component tests **MUST be co-located directly next to their corresponding source file** (e.g. `src/widgets/yt-button.test.ts` lives next to `src/widgets/yt-button.ts`).
+  - **End-to-End Tests:** [Playwright](https://playwright.dev/) running against Netlify PR deploy previews and production in `test/e2e/`.
 - **Linting & Code Formatting:**
   - [ESLint](https://eslint.org/) with `@typescript-eslint/recommended-requiring-type-checking` and `eslint-plugin-lit`.
   - [Prettier](https://prettier.io/) for deterministic formatting.
@@ -95,13 +95,14 @@ yoto-tools/
 │   ├── api/               # Yoto REST API client & OAuth PKCE engine
 │   ├── mqtt/              # MQTT over WebSocket client (AWS IoT connection)
 │   ├── context/           # App-wide Lit context definitions (auth, card, player)
-│   ├── widgets/           # Core reusable UI custom elements (<yt-button>, <yt-dialog>, etc.)
+│   ├── widgets/           # Core reusable UI custom elements and co-located unit tests
+│   │   ├── yt-button.ts
+│   │   └── yt-button.test.ts # Unit tests live directly next to corresponding source files
 │   ├── views/             # Page-level views (library, editor, importer, status)
 │   ├── services/          # Business logic (podcast parsing, zip extraction, OPFS, hashing)
 │   ├── models/            # TypeScript interfaces & domain types
 │   └── index.ts           # Application entrypoint
 ├── test/
-│   ├── unit/              # Web Test Runner unit and component tests
 │   └── e2e/               # Playwright E2E tests
 ├── AGENTS.md              # Contributor & AI Agent guidelines
 └── README.md              # Project overview & roadmap
