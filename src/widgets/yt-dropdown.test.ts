@@ -1,0 +1,104 @@
+import { html, fixture, expect, oneEvent } from "@open-wc/testing";
+import { YtDropdown } from "./yt-dropdown.js";
+import "./yt-dropdown.js";
+
+describe("YtDropdown", () => {
+  const options = [
+    { value: "opt1", label: "Option 1" },
+    { value: "opt2", label: "Option 2" },
+  ];
+
+  it("renders trigger with placeholder when unselected", async () => {
+    const el = await fixture<YtDropdown>(
+      html`<yt-dropdown
+        placeholder="Choose a playlist"
+        .options=${options}
+      ></yt-dropdown>`,
+    );
+    const trigger = el.shadowRoot!.querySelector(".trigger")!;
+    expect(trigger.textContent).to.contain("Choose a playlist");
+  });
+
+  it("opens options menu on click and emits change on selection", async () => {
+    const el = await fixture<YtDropdown>(
+      html`<yt-dropdown .options=${options}></yt-dropdown>`,
+    );
+    const trigger = el.shadowRoot!.querySelector(".trigger") as HTMLElement;
+    trigger.click();
+    await el.updateComplete;
+
+    const menu = el.shadowRoot!.querySelector(".menu")!;
+    expect(menu).to.exist;
+
+    const optElements = el.shadowRoot!.querySelectorAll(".option");
+    expect(optElements.length).to.equal(2);
+
+    setTimeout(() => (optElements[1] as HTMLElement).click());
+    const ev = await oneEvent(el, "change");
+    expect(ev.detail.value).to.equal("opt2");
+    expect(el.value).to.equal("opt2");
+  });
+
+  it("supports keyboard navigation and selection", async () => {
+    const el = await fixture<YtDropdown>(
+      html`<yt-dropdown .options=${options}></yt-dropdown>`,
+    );
+    const trigger = el.shadowRoot!.querySelector(".trigger") as HTMLElement;
+
+    // Open via ArrowDown
+    trigger.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }),
+    );
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".menu")).to.exist;
+
+    // Navigate down to second item and select with Enter
+    trigger.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }),
+    );
+    await el.updateComplete;
+
+    setTimeout(() => {
+      trigger.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+      );
+    });
+    const ev = await oneEvent(el, "change");
+    expect(ev.detail.value).to.equal("opt2");
+    expect(el.value).to.equal("opt2");
+    expect(el.shadowRoot!.querySelector(".menu")).to.not.exist;
+  });
+
+  it("closes on Escape key and on clicking outside", async () => {
+    const el = await fixture<YtDropdown>(
+      html`<yt-dropdown .options=${options}></yt-dropdown>`,
+    );
+    const trigger = el.shadowRoot!.querySelector(".trigger") as HTMLElement;
+    trigger.click();
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".menu")).to.exist;
+
+    // Escape closes
+    trigger.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".menu")).to.not.exist;
+
+    // Click outside closes
+    trigger.click();
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".menu")).to.exist;
+
+    document.body.click();
+    await el.updateComplete;
+    expect(el.shadowRoot!.querySelector(".menu")).to.not.exist;
+  });
+
+  it("is accessible", async () => {
+    const el = await fixture<YtDropdown>(
+      html`<yt-dropdown label="Select Card" .options=${options}></yt-dropdown>`,
+    );
+    await expect(el).to.be.accessible();
+  });
+});
